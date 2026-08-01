@@ -16,7 +16,7 @@ jobs:
       - name: Install pnpm
         uses: pnpm/action-setup@v3
         with:
-          version: 9
+          run_install: false
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -48,6 +48,11 @@ jobs:
         run: |
           cd apps/api
           mypy src
+
+      - name: Run Pytest (Python Tests)
+        run: |
+          cd apps/api
+          pytest
 
       - name: Run ESLint (Frontend Linting)
         run: pnpm --filter web lint

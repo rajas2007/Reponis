@@ -4,8 +4,8 @@ from src.core.config import settings
 
 celery_app = Celery(
     "reponis",
-    broker=settings.REDIS_URL,
-    backend=settings.REDIS_URL,
+    broker=str(settings.REDIS_URL),
+    backend=str(settings.REDIS_URL),
 )
 
 celery_app.conf.update(

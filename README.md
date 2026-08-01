@@ -49,9 +49,23 @@ reponis/
 ## Development Commands
 From the monorepo root:
 - `pnpm dev`: Run both frontend and backend development servers (requires turbo setup)
+- `pnpm worker`: Start the Celery worker for background jobs
 - `pnpm build`: Build the frontend and any necessary dependencies
 - `pnpm lint`: Run linting across the monorepo
 - `pnpm typecheck`: Run type checking across the monorepo
+
+## Local Verification
+Before pushing code, run the local verification system to ensure it matches the GitHub Actions CI pipeline:
+
+**PowerShell (Windows):**
+```powershell
+./scripts/verify.ps1
+```
+
+**Bash (Linux/macOS):**
+```bash
+./scripts/verify.sh
+```
 
 ## Project Architecture Overview
 The project uses a startup-focused, feature-first architecture:

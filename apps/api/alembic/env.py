@@ -1,8 +1,11 @@
+import asyncio
 import os
 import sys
 from logging.config import fileConfig
 
-from sqlalchemy import engine_from_config, pool
+from sqlalchemy import pool
+from sqlalchemy.engine import Connection
+from sqlalchemy.ext.asyncio import async_engine_from_config
 
 from alembic import context
 
@@ -27,7 +30,7 @@ target_metadata = Base.metadata
 
 
 def get_url():
-    return settings.DATABASE_URL.replace("postgres://", "postgresql://")
+    return str(settings.DATABASE_URL).replace("postgres://", "postgresql://")
 
 
 def run_migrations_offline() -> None:
@@ -44,23 +47,35 @@ def run_migrations_offline() -> None:
         context.run_migrations()
 
 
-def run_migrations_online() -> None:
-    """Run migrations in 'online' mode."""
-    configuration = config.get_section(config.config_ini_section)
-    if configuration:
-        configuration["sqlalchemy.url"] = get_url()
+def do_run_migrations(connection: Connection) -> None:
+    context.configure(connection=connection, target_metadata=target_metadata)
 
-    connectable = engine_from_config(
-        configuration or {},
+    with context.begin_transaction():
+        context.run_migrations()
+
+
+async def run_async_migrations() -> None:
+    """In this scenario we need to create an Engine
+    and associate a connection with the context.
+    """
+    configuration = config.get_section(config.config_ini_section, {})
+    configuration["sqlalchemy.url"] = get_url()
+
+    connectable = async_engine_from_config(
+        configuration,
         prefix="sqlalchemy.",
         poolclass=pool.NullPool,
     )
 
-    with connectable.connect() as connection:
-        context.configure(connection=connection, target_metadata=target_metadata)
+    async with connectable.connect() as connection:
+        await connection.run_sync(do_run_migrations)
 
-        with context.begin_transaction():
-            context.run_migrations()
+    await connectable.dispose()
+
+
+def run_migrations_online() -> None:
+    """Run migrations in 'online' mode."""
+    asyncio.run(run_async_migrations())
 
 
 if context.is_offline_mode():
