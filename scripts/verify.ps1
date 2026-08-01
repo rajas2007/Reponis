@@ -6,12 +6,12 @@ function Write-Step {
 }
 
 function Write-Pass {
-    Write-Host -ForegroundColor Green "✓ Passed`n"
+    Write-Host -ForegroundColor Green "Passed"
 }
 
 function Write-Fail {
     Write-Host -ForegroundColor Red "========================="
-    Write-Host -ForegroundColor Red "❌ Verification Failed"
+    Write-Host -ForegroundColor Red "Verification Failed"
     Write-Host -ForegroundColor Red "Fix the errors before pushing."
     Write-Host -ForegroundColor Red "========================="
     exit 1
@@ -32,7 +32,6 @@ function Run-Step {
     Write-Pass
 }
 
-# Ensure we are in the root directory
 $ScriptPath = $MyInvocation.MyCommand.Path
 $RootDir = Split-Path (Split-Path $ScriptPath)
 Set-Location $RootDir
@@ -82,15 +81,15 @@ try {
     }
     Run-Step "Backend Startup Validation" "11" { 
         Push-Location apps/api
-        python -c "from src.main import app"
+        python -c 'from src.main import app'
         $global:LASTEXITCODE = $LASTEXITCODE
         Pop-Location
     }
 
-    Write-Host -ForegroundColor Green "========================="
-    Write-Host -ForegroundColor Green "✅ Verification Passed"
-    Write-Host -ForegroundColor Green "Ready to Commit & Push"
-    Write-Host -ForegroundColor Green "========================="
+    Write-Host -ForegroundColor Green '========================='
+    Write-Host -ForegroundColor Green 'Verification Passed'
+    Write-Host -ForegroundColor Green 'Ready to Commit and Push'
+    Write-Host -ForegroundColor Green '========================='
 } catch {
     Write-Fail
 }

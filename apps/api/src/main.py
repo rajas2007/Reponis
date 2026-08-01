@@ -1,7 +1,9 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from src.core.config import settings
 from src.core.logging import setup_logging
+from src.modules.auth.router import router as auth_router
 
 setup_logging()
 
@@ -13,11 +15,13 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # update in production
+    allow_origins=[settings.FRONTEND_URL],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.include_router(auth_router, prefix="/api/v1")
 
 
 @app.get("/health", tags=["System"])
