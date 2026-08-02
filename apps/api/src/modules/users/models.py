@@ -1,12 +1,15 @@
 import uuid
 from datetime import datetime, timezone
-from typing import Optional
+from typing import TYPE_CHECKING, List, Optional
 
 from sqlalchemy import BigInteger, Column, DateTime, ForeignKey, String
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, relationship
 
 from src.core.database import Base
+
+if TYPE_CHECKING:
+    from src.modules.repositories.models import UserRepository
 
 
 def utc_now() -> datetime:
@@ -27,6 +30,9 @@ class User(Base):
 
     github_connection: Mapped[Optional["GitHubConnection"]] = relationship(
         "GitHubConnection", back_populates="user", uselist=False, cascade="all, delete-orphan"
+    )
+    repositories: Mapped[List["UserRepository"]] = relationship(
+        "UserRepository", back_populates="user", cascade="all, delete-orphan"
     )
 
 

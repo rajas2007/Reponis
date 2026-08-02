@@ -3,6 +3,7 @@
 import { useCurrentUser, useLogout } from "@/api/auth";
 import { Loader2, LogOut, GitBranch, User as UserIcon } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 import { useEffect } from "react";
 
 export default function DashboardPage() {
@@ -32,9 +33,19 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-black text-zinc-900 dark:text-zinc-50 font-sans">
       <header className="flex h-16 items-center justify-between border-b border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-6">
-        <div className="flex items-center gap-2">
-          <GitBranch className="w-6 h-6" />
-          <span className="text-xl font-bold tracking-tight">Reponis</span>
+        <div className="flex items-center gap-6">
+          <Link href="/dashboard" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+            <GitBranch className="w-6 h-6" />
+            <span className="text-xl font-bold tracking-tight">Reponis</span>
+          </Link>
+          <nav className="flex items-center gap-4">
+            <Link href="/dashboard" className="text-sm font-medium text-blue-600 dark:text-blue-400">
+              Dashboard
+            </Link>
+            <Link href="/repositories" className="text-sm font-medium text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-50 transition-colors">
+              Repositories
+            </Link>
+          </nav>
         </div>
         
         <div className="flex items-center gap-4">
