@@ -5,6 +5,7 @@ from src.core.config import settings
 from src.core.logging import setup_logging
 from src.modules.auth.router import router as auth_router
 from src.modules.repositories.router import router as repositories_router
+from src.modules.sync.router import router as sync_router
 
 setup_logging()
 
@@ -24,6 +25,7 @@ app.add_middleware(
 
 app.include_router(auth_router, prefix="/api/v1")
 app.include_router(repositories_router, prefix="/api/v1")
+app.include_router(sync_router, prefix="/api/v1")
 
 
 @app.get("/health", tags=["System"])

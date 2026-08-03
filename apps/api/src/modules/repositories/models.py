@@ -39,6 +39,12 @@ class UserRepository(Base):
     is_active = Column(Boolean, nullable=False, default=True)
     connected_at = Column(DateTime(timezone=True), default=utc_now, nullable=False)
     disconnected_at = Column(DateTime(timezone=True), nullable=True)
+    
+    # Incremental sync cursors
+    last_commit_sha = Column(String, nullable=True)
+    last_pr_updated_at = Column(DateTime(timezone=True), nullable=True)
+    last_issue_updated_at = Column(DateTime(timezone=True), nullable=True)
+    
     created_at = Column(DateTime(timezone=True), default=utc_now, nullable=False)
     updated_at = Column(DateTime(timezone=True), default=utc_now, onupdate=utc_now, nullable=False)
 

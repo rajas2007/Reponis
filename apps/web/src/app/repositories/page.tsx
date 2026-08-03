@@ -6,7 +6,12 @@ import {
   useCurrentRepository, 
   useConnectRepository 
 } from "@/api/repositories";
-import { Loader2, LogOut, GitBranch, User as UserIcon, CheckCircle2, Plus } from "lucide-react";
+import {
+  useStartSync,
+  useSyncJob,
+  useSyncHistory
+} from "@/api/sync";
+import { Loader2, LogOut, GitBranch, User as UserIcon, CheckCircle2, Plus, RefreshCw, AlertCircle } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect } from "react";
@@ -18,6 +23,11 @@ export default function RepositoriesPage() {
   const { data: currentRepoData, isLoading: isCurrentLoading } = useCurrentRepository();
   const { data: availableReposData, isLoading: isAvailableLoading } = useAvailableRepositories();
   const connect = useConnectRepository();
+
+  const { data: historyData } = useSyncHistory();
+  const latestJobId = historyData?.[0]?.id || null;
+  const { data: syncJobData } = useSyncJob(latestJobId);
+  const startSync = useStartSync();
 
   useEffect(() => {
     if (!isUserLoading && (isUserError || !user)) {
@@ -41,6 +51,8 @@ export default function RepositoriesPage() {
 
   const currentRepo = currentRepoData?.repository;
   const availableRepos = availableReposData?.repositories || [];
+  
+  const isSyncing = syncJobData?.status === 'queued' || syncJobData?.status === 'running';
 
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-black text-zinc-900 dark:text-zinc-50 font-sans">
@@ -108,10 +120,17 @@ export default function RepositoriesPage() {
                   <span className="inline-flex items-center gap-1">
                     <CheckCircle2 className="w-4 h-4" /> Connected
                   </span>
-                  &bull;
-                  <span>Status: {currentRepo.sync_status}</span>
                 </div>
               </div>
+              
+              <button
+                onClick={() => startSync.mutate()}
+                disabled={startSync.isPending || isSyncing}
+                className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <RefreshCw className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />
+                {isSyncing ? 'Syncing...' : 'Start Sync'}
+              </button>
             </div>
           ) : (
             <div className="rounded-xl border border-dashed border-zinc-300 dark:border-zinc-800 p-8 text-center bg-white dark:bg-zinc-900">
@@ -121,6 +140,51 @@ export default function RepositoriesPage() {
             </div>
           )}
         </div>
+        
+        {/* Sync Progress */}
+        {currentRepo && syncJobData && (
+          <div className="mb-12">
+            <h2 className="text-xl font-semibold mb-4">Sync Progress</h2>
+            <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  {syncJobData.status === 'failed' ? (
+                    <AlertCircle className="w-5 h-5 text-red-500" />
+                  ) : syncJobData.status === 'completed' ? (
+                    <CheckCircle2 className="w-5 h-5 text-green-500" />
+                  ) : (
+                    <RefreshCw className="w-5 h-5 text-blue-500 animate-spin" />
+                  )}
+                  <span className="font-medium capitalize">{syncJobData.status}</span>
+                </div>
+                <div className="text-sm text-zinc-500">
+                  {syncJobData.progress_data.message || 'Processing...'}
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-3 gap-4 border-t border-zinc-100 dark:border-zinc-800 pt-4">
+                <div>
+                  <div className="text-sm text-zinc-500 mb-1">Commits</div>
+                  <div className="text-2xl font-semibold">{syncJobData.progress_data.commits}</div>
+                </div>
+                <div>
+                  <div className="text-sm text-zinc-500 mb-1">Pull Requests</div>
+                  <div className="text-2xl font-semibold">{syncJobData.progress_data.pull_requests}</div>
+                </div>
+                <div>
+                  <div className="text-sm text-zinc-500 mb-1">Issues</div>
+                  <div className="text-2xl font-semibold">{syncJobData.progress_data.issues}</div>
+                </div>
+              </div>
+              
+              {syncJobData.error_message && (
+                <div className="mt-4 p-3 bg-red-50 dark:bg-red-950/30 text-red-600 dark:text-red-400 text-sm rounded-lg border border-red-100 dark:border-red-900/50">
+                  {syncJobData.error_message}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Available Repositories */}
         <div>
