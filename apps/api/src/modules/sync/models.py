@@ -1,9 +1,9 @@
 import uuid
 from datetime import datetime, timezone
 from enum import Enum as PyEnum
-from typing import TYPE_CHECKING, Any, Dict
+from typing import TYPE_CHECKING
 
-from sqlalchemy import Column, DateTime, ForeignKey, Index, String, text, Enum
+from sqlalchemy import Column, DateTime, Enum, ForeignKey, Index, String, text
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, relationship
 
@@ -41,28 +41,28 @@ class SyncJob(Base):
         nullable=False,
         index=True,
     )
-    
+
     # Enums: queued, running, completed, failed, cancelled
     status = Column(
         Enum(SyncStatus, name="sync_status"),
         nullable=False,
         default=SyncStatus.QUEUED,
     )
-    
+
     # Enums: manual, scheduled, webhook
     triggered_by = Column(
         Enum(TriggeredBy, name="triggered_by"),
         nullable=False,
         default=TriggeredBy.MANUAL,
     )
-    
+
     progress_data = Column(JSONB, nullable=False, default=dict)
-    
+
     error_message = Column(String, nullable=True)
-    
+
     started_at = Column(DateTime(timezone=True), default=utc_now, nullable=False)
     finished_at = Column(DateTime(timezone=True), nullable=True)
-    
+
     created_at = Column(DateTime(timezone=True), default=utc_now, nullable=False)
     updated_at = Column(DateTime(timezone=True), default=utc_now, onupdate=utc_now, nullable=False)
 

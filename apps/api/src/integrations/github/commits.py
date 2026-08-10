@@ -11,17 +11,19 @@ async def fetch_repository_commits(
     Handles rate limiting automatically by raising GitHubRateLimitException if threshold is hit.
     """
     params: Dict[str, Any] = {"per_page": per_page, "page": page}
-    # Note: GitHub doesn't have a strict 'since_sha' parameter for commit history pagination 
+    # Note: GitHub doesn't have a strict 'since_sha' parameter for commit history pagination
     # except `since` (timestamp) or `sha` (branch/commit).
     # For MVP, we might fetch from default branch and stop when we see `last_commit_sha`.
-    
+
     async with GitHubClient.get_async_client(token) as client:
         response = await client.get(
             f"{GitHubClient.BASE_API_URL}/repos/{full_name}/commits",
             params=params,
         )
-        
+
         GitHubClient.check_rate_limit(response)
         response.raise_for_status()
-        
-        return response.json()
+
+        from typing import cast
+
+        return cast(List[Dict[str, Any]], response.json())

@@ -26,6 +26,7 @@ class GitHubClient:
         Checks rate limit headers and raises GitHubRateLimitException if budget is below threshold.
         """
         from datetime import datetime, timezone
+
         from src.integrations.github.exceptions import GitHubRateLimitException
 
         remaining = response.headers.get("X-RateLimit-Remaining")
@@ -35,8 +36,7 @@ class GitHubClient:
             reset_at = None
             if reset_time:
                 reset_at = datetime.fromtimestamp(int(reset_time), tz=timezone.utc)
-            
+
             raise GitHubRateLimitException(
-                message=f"GitHub rate limit reached (Remaining: {remaining}).",
-                reset_at=reset_at
+                message=f"GitHub rate limit reached (Remaining: {remaining}).", reset_at=reset_at
             )

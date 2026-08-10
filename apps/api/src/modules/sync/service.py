@@ -21,15 +21,20 @@ async def start_sync(session: AsyncSession, user_id: uuid.UUID) -> SyncJob:
         )
 
     sync_repo = SyncJobRepository(session)
-    
+
     # Check if a queued or running job exists
-    existing_job = await sync_repo.get_active_job(active_repo.id)
+    from typing import cast
+
+    repo_id = cast(uuid.UUID, active_repo.id)
+    existing_job = await sync_repo.get_active_job(repo_id)
     if existing_job:
         return existing_job
 
     # Create new job
+    from typing import Any
+
     new_job = SyncJob(
-        user_repository_id=active_repo.id,
+        user_repository_id=cast(Any, repo_id),
         status=SyncStatus.QUEUED,
         triggered_by=TriggeredBy.MANUAL,
         progress_data={
@@ -43,42 +48,40 @@ async def start_sync(session: AsyncSession, user_id: uuid.UUID) -> SyncJob:
             "resume_at": None,
         },
     )
-    
+
     await sync_repo.create(new_job)
     await session.commit()
     await session.refresh(new_job)
-    
+
     # Trigger Celery task
     sync_repository_task.delay(str(new_job.id))
-    
+
     return new_job
 
 
 async def get_job(session: AsyncSession, job_id: uuid.UUID, user_id: uuid.UUID) -> SyncJob:
     sync_repo = SyncJobRepository(session)
     job = await sync_repo.get_by_id(job_id)
-    
+
     if not job:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Sync job not found.",
         )
-        
+
     # Ensure job belongs to the user
-    # We must join with UserRepository to check this
+    from typing import cast
+
+    job_repo_id = cast(uuid.UUID, job.user_repository_id)
     repo_repo = RepositoriesRepository(session)
-    repo = await session.get(repo_repo.session.get_bind().mapper.class_, job.user_repository_id) # simpler to just get user repo by id, wait, let's do a fast query
-    # actually, I'll write a small check
-    # But for now, let's fetch the repo to verify
-    # Let's import the model directly and check
-    from src.modules.repositories.models import UserRepository
-    user_repo = await session.get(UserRepository, job.user_repository_id)
+    user_repo = await repo_repo.get_by_id(job_repo_id)
+
     if not user_repo or user_repo.user_id != user_id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Access denied.",
         )
-        
+
     return job
 
 
@@ -93,4 +96,7 @@ async def get_history(session: AsyncSession, user_id: uuid.UUID) -> List[SyncJob
         )
 
     sync_repo = SyncJobRepository(session)
-    return await sync_repo.get_history(active_repo.id)
+    from typing import cast
+
+    repo_id = cast(uuid.UUID, active_repo.id)
+    return await sync_repo.get_history(repo_id)

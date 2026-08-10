@@ -24,6 +24,11 @@ class RepositoriesRepository:
         result = await self.session.execute(stmt)
         return result.scalars().first()
 
+    async def get_by_id(self, id: UUID) -> Optional[UserRepository]:
+        stmt = select(UserRepository).where(UserRepository.id == id)
+        result = await self.session.execute(stmt)
+        return result.scalars().first()
+
     async def get_all_by_user_id(self, user_id: UUID) -> List[UserRepository]:
         stmt = (
             select(UserRepository)
