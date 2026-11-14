@@ -35,3 +35,33 @@ async def fetch_repository_pull_requests(
         from typing import cast
 
         return cast(List[Dict[str, Any]], response.json())
+
+
+async def fetch_pull_request_reviews(
+    token: str,
+    full_name: str,
+    pull_number: int,
+    page: int = 1,
+    per_page: int = 100,
+) -> List[Dict[str, Any]]:
+    """
+    Fetches raw reviews for a specific pull request.
+    Handles rate limiting automatically.
+    """
+    params: Dict[str, Any] = {
+        "per_page": per_page,
+        "page": page,
+    }
+
+    async with GitHubClient.get_async_client(token) as client:
+        response = await client.get(
+            f"{GitHubClient.BASE_API_URL}/repos/{full_name}/pulls/{pull_number}/reviews",
+            params=params,
+        )
+
+        GitHubClient.check_rate_limit(response)
+        response.raise_for_status()
+
+        from typing import cast
+
+        return cast(List[Dict[str, Any]], response.json())

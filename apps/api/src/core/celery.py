@@ -6,6 +6,10 @@ celery_app = Celery(
     "reponis",
     broker=str(settings.REDIS_URL),
     backend=str(settings.REDIS_URL),
+    include=[
+        "src.modules.sync.tasks.sync_repository",
+        "src.modules.analytics.tasks.compute_metrics",
+    ],
 )
 
 celery_app.conf.update(
@@ -15,4 +19,8 @@ celery_app.conf.update(
     timezone="UTC",
     enable_utc=True,
     task_track_started=True,
+    include=[
+        "src.modules.sync.tasks.sync_repository",
+        "src.modules.analytics.tasks.compute_metrics",
+    ],
 )
