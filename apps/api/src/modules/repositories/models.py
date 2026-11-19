@@ -9,6 +9,7 @@ from sqlalchemy.orm import Mapped, relationship
 from src.core.database import Base
 
 if TYPE_CHECKING:
+    from src.modules.sync.state_models import RepositorySyncState
     from src.modules.users.models import User
 
 
@@ -49,6 +50,12 @@ class UserRepository(Base):
     updated_at = Column(DateTime(timezone=True), default=utc_now, onupdate=utc_now, nullable=False)
 
     user: Mapped["User"] = relationship("User", back_populates="repositories")
+    sync_state: Mapped["RepositorySyncState | None"] = relationship(
+        "RepositorySyncState",
+        back_populates="repository",
+        uselist=False,
+        cascade="all, delete-orphan",
+    )
 
     __table_args__ = (
         Index(

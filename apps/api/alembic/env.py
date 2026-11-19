@@ -16,6 +16,7 @@ import src.modules.analytics.models  # noqa: F401
 import src.modules.repositories.models  # noqa: F401
 import src.modules.sync.models  # noqa: F401
 import src.modules.sync.raw_models  # noqa: F401
+import src.modules.sync.state_models  # noqa: F401
 import src.modules.users.models  # noqa: F401
 from src.core.config import settings
 from src.core.database import Base

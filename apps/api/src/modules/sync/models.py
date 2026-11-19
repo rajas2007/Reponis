@@ -1,9 +1,9 @@
 import uuid
 from datetime import datetime, timezone
 from enum import Enum as PyEnum
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
-from sqlalchemy import Column, DateTime, Enum, ForeignKey, Index, String, text
+from sqlalchemy import Column, DateTime, Enum, ForeignKey, Index, Integer, String, text
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, relationship
 
@@ -60,6 +60,13 @@ class SyncJob(Base):
 
     error_message = Column(String, nullable=True)
 
+    # Fencing and scheduling fields
+    retry_at = Column(DateTime(timezone=True), nullable=True)
+    dispatch_lease_until = Column(DateTime(timezone=True), nullable=True)
+    worker_lease_until = Column(DateTime(timezone=True), nullable=True)
+    worker_epoch = Column(Integer, nullable=False, default=0)
+    worker_token = Column(UUID(as_uuid=True), nullable=True)
+
     started_at = Column(DateTime(timezone=True), default=utc_now, nullable=False)
     finished_at = Column(DateTime(timezone=True), nullable=True)
 
@@ -68,11 +75,28 @@ class SyncJob(Base):
 
     repository: Mapped["UserRepository"] = relationship("UserRepository")
 
+    def __init__(self, **kwargs: Any) -> None:
+        kwargs.setdefault("worker_epoch", 0)
+        super().__init__(**kwargs)
+
     __table_args__ = (
         Index(
             "idx_unique_active_sync_per_repo",
             "user_repository_id",
             unique=True,
             postgresql_where=text("status IN ('queued', 'running')"),
+        ),
+        Index(
+            "idx_sync_jobs_queued_dispatch",
+            "status",
+            "retry_at",
+            "dispatch_lease_until",
+            postgresql_where=text("status = 'queued'"),
+        ),
+        Index(
+            "idx_sync_jobs_running_lease",
+            "status",
+            "worker_lease_until",
+            postgresql_where=text("status = 'running'"),
         ),
     )
